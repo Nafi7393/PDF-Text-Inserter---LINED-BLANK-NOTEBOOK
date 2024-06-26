@@ -29,7 +29,8 @@ def read_file(file_path):
 
 def add_lines_to_pdf(input_pdf_path, output_pdf_path, lines_file_path,
                      font_size=12, left_margin=40, right_margin=40, text_height=25, initial_y=46,
-                     font="Helvetica-Oblique", shuffle_lines=True):
+                     font="Helvetica-Oblique", shuffle_lines=True,
+                     ignore_first_pages=2, ignore_last_pages=0):
     lines = read_file(lines_file_path)
     print(lines)
     print(len(lines))
@@ -43,7 +44,7 @@ def add_lines_to_pdf(input_pdf_path, output_pdf_path, lines_file_path,
     output_pdf = PdfWriter()
 
     # Add the first few pages as they are
-    for page in existing_pdf.pages[:2]:
+    for page in existing_pdf.pages[:ignore_first_pages]:
         output_pdf.add_page(page)
 
     # Get the page size dynamically
@@ -53,14 +54,14 @@ def add_lines_to_pdf(input_pdf_path, output_pdf_path, lines_file_path,
     available_width = page_size[0] - left_margin - right_margin
 
     line_count = len(lines)
-    page_count = len(existing_pdf.pages) - 2  # Number of pages where we can place lines
+    page_count = len(existing_pdf.pages) - ignore_first_pages - ignore_last_pages  # Number of pages where we can place lines
 
     # Distribute the lines proportionally across the pages
     pages_with_lines = sorted(random.sample(range(page_count), line_count))
 
     # Iterate through each page and add lines
     line_index = 0
-    for i, page in enumerate(existing_pdf.pages[2:]):
+    for i, page in enumerate(existing_pdf.pages[ignore_first_pages:(len(existing_pdf.pages) - ignore_last_pages)]):
         packet = io.BytesIO()
         can = canvas.Canvas(packet, pagesize=page_size)
 
@@ -132,10 +133,10 @@ def add_lines_to_pdf(input_pdf_path, output_pdf_path, lines_file_path,
         f.write(output_stream.getvalue())
 
 
-# Example usage
-add_lines_to_pdf(input_pdf_path='assets/line_page_pdf.pdf',
-                 output_pdf_path='output/Final - INTERIOR.pdf',
-                 lines_file_path='lines.csv',
-                 font_size=12, left_margin=40, right_margin=40,
-                 text_height=25, initial_y=46, font="Helvetica-Oblique",
-                 shuffle_lines=True)
+if __name__ == "__main__":
+    add_lines_to_pdf(input_pdf_path='assets/line_page_pdf.pdf',
+                     output_pdf_path='output/Final - INTERIOR.pdf',
+                     lines_file_path='assets/lines.csv',
+                     font_size=12, left_margin=40, right_margin=40,
+                     text_height=25, initial_y=46, font="Helvetica-Oblique",
+                     shuffle_lines=True, ignore_first_pages=2, ignore_last_pages=0)
